@@ -1,39 +1,25 @@
-// UW Student Portal - deliberately vulnerable training app. All data is fake.
-const API_KEY = "";
-const ADMIN_PASSWORD = "";
+// UW Student Portal - Security Remediated Version
 
 const USERS = [
   {
     id: 1001,
     name: "Ayesha Khan",
-    email: "ayesha@uw.test",
-    password: "[REDACTED]",
-    role: "student",
-    cnic: "35202-1234567-1"
+    email: "ayesha@uw.test"
   },
   {
     id: 1002,
     name: "Bilal Ahmed",
-    email: "bilal@uw.test",
-    password: "[REDACTED]",
-    role: "student",
-    cnic: "35202-7654321-9"
+    email: "bilal@uw.test"
   },
   {
     id: 2001,
     name: "Dr. Sana Malik",
-    email: "sana@uw.test",
-    password: "[REDACTED]",
-    role: "teacher",
-    cnic: "35202-1111111-2"
+    email: "sana@uw.test"
   },
   {
     id: 9001,
     name: "Admin",
-    email: "admin@uw.test",
-    password: ADMIN_PASSWORD,
-    role: "admin",
-    cnic: "35202-9999999-3"
+    email: "admin@uw.test"
   }
 ];
 
@@ -49,102 +35,94 @@ const COURSES = [
   "MT-210 Discrete Maths"
 ];
 
-const params = new URLSearchParams(location.search);
-
 const $ = (id) => document.getElementById(id);
 
-function getSession() {
-  const s = localStorage.getItem("session");
-  return s ? JSON.parse(s) : null;
+let currentUser = null;
+
+function showLoginMessage(message) {
+  $("loginMsg").textContent = message;
 }
 
 $("loginForm").addEventListener("submit", (e) => {
   e.preventDefault();
 
-  const email = $("email").value;
-  const pw = $("password").value;
+  const email = $("email").value.trim();
 
-  const u = USERS.find(
-    (x) => x.email === email && x.password === pw
-  );
+  const user = USERS.find((u) => u.email === email);
 
-  if (!u) {
-    $("loginMsg").textContent = "Login failed.";
+  if (!user) {
+    showLoginMessage("Invalid account.");
     return;
   }
 
-  localStorage.setItem(
-  "session",
-  JSON.stringify({
-    id: u.id,
-    name: u.name
-  })
-);
-  const next = params.get("next");
-
-  if (next === "/dashboard") {
-  location.href = next;
-  return;
-}
+  currentUser = {
+    id: user.id,
+    name: user.name
+  };
 
   render();
 });
 
 $("resultForm").addEventListener("submit", (e) => {
   e.preventDefault();
-  showResult($("rid").value);
+
+  if (!currentUser) {
+    $("resultOut").textContent = "Please sign in.";
+    return;
+  }
+
+  const result = RESULTS[currentUser.id];
+
+  if (!result) {
+    $("resultOut").textContent = "No result found.";
+    return;
+  }
+
+  $("resultOut").textContent =
+    `${currentUser.name}: ${result.course} = ${result.marks}`;
 });
-
-function showResult(id) {
-  const r = RESULTS[id];
-  const u = USERS.find(
-    (x) => String(x.id) === String(id)
-  );
-
-  $("resultOut").textContent = r
-    ? u.name + ": " + r.course + " = " + r.marks
-    : "No result found.";
-}
 
 $("searchForm").addEventListener("submit", (e) => {
   e.preventDefault();
 
-  const q = $("q").value;
+  const query = $("q").value.trim().toLowerCase();
 
-  const hits = COURSES.filter((c) =>
-    c.toLowerCase().includes(q.toLowerCase())
+  const hits = COURSES.filter((course) =>
+    course.toLowerCase().includes(query)
   );
 
- $("searchOut").textContent = hits.length
-  ? hits.join(", ")
-  : "No courses match.";
+  $("searchOut").textContent =
+    hits.length > 0
+      ? hits.join(", ")
+      : "No matching courses found.";
 });
 
 $("logout").addEventListener("click", () => {
-  localStorage.removeItem("session");
+  currentUser = null;
+
+  $("resultOut").textContent = "";
+  $("searchOut").textContent = "";
+
   render();
 });
 
 function render() {
-  const s = getSession();
+  const loggedIn = currentUser !== null;
 
-  $("loginBox").classList.toggle("hidden", !!s);
-  $("dash").classList.toggle("hidden", !s);
+  $("loginBox").classList.toggle("hidden", loggedIn);
+  $("dash").classList.toggle("hidden", !loggedIn);
 
-  if (!s) return;
-
-  $("welcome").textContent =
-  "Welcome, " + s.name;
-
-  if (params.get("id")) {
-    showResult(params.get("id"));
+  if (!loggedIn) {
+    return;
   }
 
-  if (s.role === "admin") {
-    $("admin").classList.remove("hidden");
+  $("welcome").textContent =
+    "Welcome, " + currentUser.name;
 
- $("userList").textContent =
-  "User list removed for security.";
+  $("admin").classList.add("hidden");
+
+  if ($("userList")) {
+    $("userList").textContent = "";
   }
 }
 
