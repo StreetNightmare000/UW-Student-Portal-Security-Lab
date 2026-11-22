@@ -1,13 +1,13 @@
 // UW Student Portal - deliberately vulnerable training app. All data is fake.
-const API_KEY = "sk-live-uwportal-FAKE-4f9a8c71";
-const ADMIN_PASSWORD = "Admin@123";
+const API_KEY = "";
+const ADMIN_PASSWORD = "";
 
 const USERS = [
   {
     id: 1001,
     name: "Ayesha Khan",
     email: "ayesha@uw.test",
-    password: "ayesha123",
+    password: "[REDACTED]",
     role: "student",
     cnic: "35202-1234567-1"
   },
@@ -15,7 +15,7 @@ const USERS = [
     id: 1002,
     name: "Bilal Ahmed",
     email: "bilal@uw.test",
-    password: "bilal123",
+    password: "[REDACTED]",
     role: "student",
     cnic: "35202-7654321-9"
   },
@@ -23,7 +23,7 @@ const USERS = [
     id: 2001,
     name: "Dr. Sana Malik",
     email: "sana@uw.test",
-    password: "teacher123",
+    password: "[REDACTED]",
     role: "teacher",
     cnic: "35202-1111111-2"
   },
@@ -69,26 +69,23 @@ $("loginForm").addEventListener("submit", (e) => {
   );
 
   if (!u) {
-    $("loginMsg").innerHTML = "Login failed for " + email;
+    $("loginMsg").textContent = "Login failed.";
     return;
   }
 
   localStorage.setItem(
-    "session",
-    JSON.stringify({
-      id: u.id,
-      name: u.name,
-      role: u.role,
-      cnic: u.cnic
-    })
-  );
-
+  "session",
+  JSON.stringify({
+    id: u.id,
+    name: u.name
+  })
+);
   const next = params.get("next");
 
-  if (next) {
-    location.href = next;
-    return;
-  }
+  if (next === "/dashboard") {
+  location.href = next;
+  return;
+}
 
   render();
 });
@@ -118,9 +115,9 @@ $("searchForm").addEventListener("submit", (e) => {
     c.toLowerCase().includes(q.toLowerCase())
   );
 
-  $("searchOut").innerHTML = hits.length
-    ? hits.join("<br>")
-    : "No courses match: " + q;
+ $("searchOut").textContent = hits.length
+  ? hits.join(", ")
+  : "No courses match.";
 });
 
 $("logout").addEventListener("click", () => {
@@ -136,8 +133,8 @@ function render() {
 
   if (!s) return;
 
-  $("welcome").innerHTML =
-    "Welcome, " + (params.get("name") || s.name);
+  $("welcome").textContent =
+  "Welcome, " + s.name;
 
   if (params.get("id")) {
     showResult(params.get("id"));
@@ -146,16 +143,8 @@ function render() {
   if (s.role === "admin") {
     $("admin").classList.remove("hidden");
 
-    $("userList").innerHTML = USERS.map(
-      (u) =>
-        "<li>" +
-        u.name +
-        " (" +
-        u.role +
-        ") CNIC " +
-        u.cnic +
-        "</li>"
-    ).join("");
+ $("userList").textContent =
+  "User list removed for security.";
   }
 }
 
